@@ -11,8 +11,8 @@ pipeline {
             steps {
                 echo 'Git Checkout in Progress...'
                 git branch: 'main', url: 'https://github.com/Dahreau/buy-01.git'
-        bat 'dir backend /B'
-        bat 'dir frontend /B'
+        sh 'ls backend'
+        sh 'ls frontend'
             }
         }
         
@@ -21,21 +21,21 @@ pipeline {
                 stage('User Service') {
                     steps {
                         dir('backend/user-service') {
-                            bat 'mvn clean test'
+                            sh 'mvn clean test'
                         }
                     }
                 }
                 stage('Product Service') {
                     steps {
                         dir('backend/product-service') {
-                            bat 'set INTERNAL_TOKEN=jenkins-test-token && mvn clean test'
+                            sh 'export INTERNAL_TOKEN=jenkins-test-token && mvn clean test'
                         }
                     }
                 }
                 stage('Media Service') {
                     steps {
                         dir('backend/media-service') {
-                            bat 'mvn clean test'
+                            sh 'mvn clean test'
                         }
                     }
                 }
@@ -45,9 +45,9 @@ pipeline {
         stage('Build & Test Frontend') {
             steps {
                 dir('frontend') {
-                    bat 'npm install'
-                    bat 'npm run build'
-                    bat 'set CI=true && npm test -- --project=buy-frontend'
+                    sh 'npm install'
+                    sh 'npm run build'
+                    sh 'export CI=true && npm test -- --project=buy-frontend'
                 }
             }
         }
@@ -57,29 +57,29 @@ pipeline {
                 script {
                     echo '🚀 Starting deployment process...'
                     
-                    bat '''
+                    sh '''
                         echo "1. Creating backup of current version..."
                         echo "2. Deploying new version to staging environment..."
                         echo "3. Running health check..."
                         
-                        REM --- POINT CRITIQUE : SIMULE UN ÉCHEC ALÉATOIRE POUR MONTRER LE ROLLBACK ---
-                        REM Pour tester le rollback, décommente la ligne suivante :
-                        REM echo "❌ Health check failed!" && exit 1
+                        # --- POINT CRITIQUE : SIMULE UN ÉCHEC ALÉATOIRE POUR MONTRER LE ROLLBACK ---
+                        # Pour tester le rollback, décommente la ligne suivante :
+                        # echo "❌ Health check failed!" && exit 1
                         
                         echo "✅ Health check passed."
                         echo "4. Switching traffic to new version..."
                     '''
                     
                     catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                        bat '''
-                            REM Si une des étapes précédentes échoue, ce bloc ne s'exécute pas
+                        sh '''
+                            # Si une des étapes précédentes échoue, ce bloc ne s'exécute pas
                             echo "✅ Deployment completed successfully."
                         '''
                     }
                     
                     if (currentBuild.currentResult == 'FAILURE') {
                         echo '🔄 Initiating rollback procedure...'
-                        bat '''
+                        sh '''
                             echo "1. Rolling back to previous stable version..."
                             echo "2. Restoring from backup..."
                             echo "3. Verifying system is operational..."
