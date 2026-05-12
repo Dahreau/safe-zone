@@ -4,15 +4,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-@TestPropertySource(properties = {
-    "spring.data.mongodb.uri=mongodb://localhost:27017/test-users",
-    "jwt.secret=test-secret-key-for-jwt-token-generation-in-tests"
-})
+@ActiveProfiles("test")
 class UserServiceApplicationTests {
 
     @Autowired
@@ -22,15 +19,15 @@ class UserServiceApplicationTests {
     void contextLoads() {
         // Test that Spring context loads successfully
         assertNotNull(context, "Spring application context should be loaded");
-        assertTrue(context.containsBean("userServiceApplication"), 
-                  "UserServiceApplication bean should be present");
+        assertTrue(context.containsBean("userServiceApplication"),
+                "UserServiceApplication bean should be present");
     }
 
     @Test
     void mainMethod_ShouldStartApplication() {
         // Test that the application can start without errors
         assertDoesNotThrow(() -> {
-            UserServiceApplication.main(new String[] {});
+            UserServiceApplication.main(new String[]{});
         }, "Application should start without throwing exceptions");
     }
 
@@ -38,16 +35,11 @@ class UserServiceApplicationTests {
     void essentialBeans_ShouldBeAvailable() {
         // Test that essential beans are properly configured
         assertNotNull(context.getBean(org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder.class),
-                     "BCryptPasswordEncoder bean should be available");
-        
+                "BCryptPasswordEncoder bean should be available");
+
         // Check if MongoDB related beans are available
-        try {
-            assertNotNull(context.getBean(org.springframework.data.mongodb.core.MongoTemplate.class),
-                         "MongoTemplate bean should be available");
-        } catch (Exception e) {
-            // MongoDB might not be available in test environment, which is OK for unit tests
-            System.out.println("MongoDB not available in test environment: " + e.getMessage());
-        }
+        assertNotNull(context.getBean(org.springframework.data.mongodb.core.MongoTemplate.class),
+                "MongoTemplate bean should be available");
     }
 
     @Test
