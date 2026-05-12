@@ -1,21 +1,21 @@
 package com.example.productservice.controller;
 
-import com.example.productservice.model.Product;
-import com.example.productservice.repository.ProductRepository;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.TestPropertySource;
 
-
-
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
+import com.example.productservice.model.Product;
+import com.example.productservice.repository.ProductRepository;
 
 @SpringBootTest
 @TestPropertySource(properties = {
@@ -31,7 +31,7 @@ class ProductControllerTest {
     private ProductRepository productRepository;
 
     @BeforeEach
-    void cleanup() {
+    public void cleanup() {
         productRepository.deleteAll();
     }
 
@@ -69,7 +69,7 @@ class ProductControllerTest {
         ResponseEntity<?> response = productController.getOne(saved.getId());
 
         // Then
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
         Product found = (Product) response.getBody();
         assertNotNull(found);
         assertEquals("Test Product", found.getName());
@@ -82,7 +82,7 @@ class ProductControllerTest {
         ResponseEntity<?> response = productController.getOne("nonexistent-id");
 
         // Then
-        assertEquals(404, response.getStatusCodeValue());
+        assertEquals(404, response.getStatusCode().value());
     }
 
     @Test
@@ -99,7 +99,7 @@ class ProductControllerTest {
         ResponseEntity<?> response = productController.addImage(saved.getId(), request, wrongToken);
 
         // Then
-        assertEquals(403, response.getStatusCodeValue());
+        assertEquals(403, response.getStatusCode().value());
     }
 
     @Test
@@ -115,7 +115,7 @@ class ProductControllerTest {
         ResponseEntity<?> response = productController.addImage(saved.getId(), request, null);
 
         // Then
-        assertEquals(403, response.getStatusCodeValue());
+        assertEquals(403, response.getStatusCode().value());
     }
 
     @Test
@@ -130,7 +130,7 @@ class ProductControllerTest {
         ResponseEntity<?> response = productController.create(product);
 
         // Then
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
         Product created = (Product) response.getBody();
         assertNotNull(created);
         assertEquals("seller1", created.getUserId()); // Vérifie que le userId est bien set
@@ -147,6 +147,6 @@ class ProductControllerTest {
         ResponseEntity<?> response = productController.create(product);
 
         // Then
-        assertEquals(403, response.getStatusCodeValue());
+        assertEquals(403, response.getStatusCode().value());
     }
 }

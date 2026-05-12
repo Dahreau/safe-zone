@@ -52,3 +52,7 @@ Thumbs.db
 # System files / packages
 *.deb
 *.crt
+
+# Jenkins
+old-jenkins-data/
+jenkins-data/

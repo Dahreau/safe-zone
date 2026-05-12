@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   mongo:
     image: mongo:6.0
@@ -9,6 +8,17 @@ services:
       - mongo-data:/data/db
     networks:
       - buy-net
+
+  jenkins:
+    image: jenkins/jenkins:lts
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    networks:
+      - buy-net
+    volumes:
+      - jenkins-data:/var/jenkins_home
 
   frontend:
     build: ./frontend
@@ -64,6 +74,7 @@ services:
 
 volumes:
   mongo-data:
+  jenkins-data:
 
 networks:
   buy-net:
