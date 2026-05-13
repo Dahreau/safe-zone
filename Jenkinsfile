@@ -32,7 +32,7 @@ pipeline {
                 stage('Product Service') {
                     steps {
                         dir('backend/product-service') {
-                            sh 'export INTERNAL_TOKEN=jenkins-test-token && mvn clean test'
+                            sh 'mvn clean test'
                         }
                     }
                 }

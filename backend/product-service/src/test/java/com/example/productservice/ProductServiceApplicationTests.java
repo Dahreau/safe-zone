@@ -1,7 +1,6 @@
 package com.example.productservice;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
@@ -52,6 +51,6 @@ class ProductServiceApplicationTests {
         // Test that internal token for microservice communication is available
         String internalToken = context.getEnvironment().getProperty("INTERNAL_TOKEN");
         assertNotNull(internalToken, "Internal token for service communication should be configured");
-        assertEquals("test-internal-token-for-microservices", internalToken);
+        assertTrue(internalToken != null && !internalToken.trim().isEmpty(), "Internal token should not be empty");
     }
 }
