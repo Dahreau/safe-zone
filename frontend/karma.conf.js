@@ -1,3 +1,6 @@
+const puppeteer = require("puppeteer");
+process.env.CHROME_BIN = puppeteer.executablePath();
+
 module.exports = function (config) {
   const isCI = process.env.CI === "true";
 
@@ -21,7 +24,13 @@ module.exports = function (config) {
     colors: true,
     logLevel: config.LOG_INFO,
     autoWatch: false,
-    browsers: ["ChromeHeadless"],
+    browsers: ["ChromeHeadlessNoSandbox"],
+    customLaunchers: {
+      ChromeHeadlessNoSandbox: {
+        base: "ChromeHeadless",
+        flags: ["--no-sandbox", "--disable-setuid-sandbox"],
+      },
+    },
     singleRun: true,
     restartOnFileChange: false,
   });
