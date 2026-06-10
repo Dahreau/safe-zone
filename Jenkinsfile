@@ -10,6 +10,11 @@ pipeline {
         pollSCM('* * * * *')
     }
 
+    environment {
+        JWT_SECRET = credentials('jwt-secret')
+        INTERNAL_TOKEN = credentials('internal-token')
+    }
+
     stages {
         
         stage('Checkout Git') {
@@ -63,32 +68,34 @@ pipeline {
                     echo '🚀 Starting deployment process...'
                     
                     sh '''
-                        echo "1. Creating backup of current version..."
-                        echo "2. Deploying new version to staging environment..."
-                        echo "3. Running health check..."
-                        
-                        # --- POINT CRITIQUE : SIMULE UN ÉCHEC ALÉATOIRE POUR MONTRER LE ROLLBACK ---
-                        # Pour tester le rollback, décommente la ligne suivante :
-                        # echo "❌ Health check failed!" && exit 1
-                        
-                        echo "✅ Health check passed."
-                        echo "4. Switching traffic to new version..."
+                        docker compose pull || true
+                        docker images --format "{{.Repository}}:{{.Tag}}" | grep buy-01 | grep latest > /tmp/current_images.txt || true
+                        for img in $(cat /tmp/current_images.txt); do
+                            docker tag $img ${img}-backup || true
+                        done
                     '''
                     
                     catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                         sh '''
-                            # Si une des étapes précédentes échoue, ce bloc ne s'exécute pas
-                            echo "✅ Deployment completed successfully."
+                            docker-compose build
+                            docker-compose up -d
+                            
+                            sleep 15
+                            
+                            if docker ps | grep "Restarting\\|Exited" | grep "buy-01"; then
+                                exit 1
+                            fi
                         '''
                     }
                     
                     if (currentBuild.currentResult == 'FAILURE') {
-                        echo '🔄 Initiating rollback procedure...'
                         sh '''
-                            echo "1. Rolling back to previous stable version..."
-                            echo "2. Restoring from backup..."
-                            echo "3. Verifying system is operational..."
-                            echo "✅ Rollback completed. System is stable."
+                            for img in $(docker images --format "{{.Repository}}:{{.Tag}}" | grep backup); do
+                                original=$(echo $img | sed 's/-backup//')
+                                docker tag $img $original || true
+                            done
+                            
+                            docker-compose up -d
                         '''
                         error('Deployment failed. Rollback was executed.')
                     }

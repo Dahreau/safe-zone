@@ -35,8 +35,8 @@ services:
       - "8081:8081"
     environment:
       - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017/userdb
-      - JWT_SECRET=ChangeThisJWTSecretToASecureValue
-      - INTERNAL_TOKEN=ChangeThisInternalToken
+      - JWT_SECRET=${JWT_SECRET}
+      - INTERNAL_TOKEN=${INTERNAL_TOKEN}
     depends_on:
       - mongo
     networks:
