@@ -73,46 +73,35 @@ pipeline {
             }
         }
     
-        // stage('Deploy with Rollback Strategy') {
-        //     steps {
-        //         script {
-        //             echo '🚀 Starting deployment process...'
+        stage('Deploy with Rollback Strategy') {
+            steps {
+                script {
+                    echo '🚀 Starting deployment process...'
                     
-        //             sh '''
-        //                 docker compose pull || true
-        //                 docker images --format "{{.Repository}}:{{.Tag}}" | grep buy-01 | grep latest > /tmp/current_images.txt || true
-        //                 for img in $(cat /tmp/current_images.txt); do
-        //                     docker tag $img ${img}-backup || true
-        //                 done
-        //             '''
+                    sh 'docker images --format "{{.Repository}}:{{.Tag}}" | grep buy-01 | grep latest > /tmp/current_images.txt || true'
+                    sh 'for img in $(cat /tmp/current_images.txt); do docker tag $img ${img}-backup || true; done'
                     
-        //             catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-        //                 sh '''
-        //                     docker compose -p buy-01 build --no-cache user-service product-service media-service frontend mongo
-        //                     docker compose -p buy-01 up -d user-service product-service media-service frontend mongo
-                            
-        //                     sleep 15
-                            
-        //                     if docker ps | grep "Restarting\\|Exited" | grep "buy-01"; then
-        //                         exit 1
-        //                     fi
-        //                 '''
-        //             }
-                    
-        //             if (currentBuild.currentResult == 'FAILURE') {
-        //                 sh '''
-        //                     for img in $(docker images --format "{{.Repository}}:{{.Tag}}" | grep backup); do
-        //                         original=$(echo $img | sed 's/-backup//')
-        //                         docker tag $img $original || true
-        //                     done
-                            
-        //                     docker compose -p buy-01 up -d
-        //                 '''
-        //                 error('Deployment failed. Rollback was executed.')
-        //             }
-        //         }
-        //     }
-        // }
+                    try {
+                        sh 'docker compose -p buy-01 build'
+                        sh 'docker compose -p buy-01 up -d'
+                        
+                        timeout(time: 2, unit: 'MINUTES') {
+                            sh 'until [ $(docker compose -p buy-01 ps -q | wc -l) -eq 5 ]; do sleep 5; done'
+                        }
+                    } catch (Exception e) {
+                        echo '❌ Erreur détectée, lancement du Rollback...'
+                        sh '''
+                            for img in $(docker images --format "{{.Repository}}:{{.Tag}}" | grep backup); do
+                                original=$(echo $img | sed 's/-backup//')
+                                docker tag $img $original || true
+                            done
+                            docker compose -p buy-01 up -d
+                        '''
+                        error('Déploiement échoué, rollback effectué.')
+                    }
+                }
+            }
+        }
     }
     
     post {
