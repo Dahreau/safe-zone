@@ -118,9 +118,7 @@ pipeline {
     post {
         always {
             echo "📊 Pipeline execution finished. Status: ${currentBuild.currentResult}"
-            node('') {
-                junit '**/target/surefire-reports/*.xml'
-            }
+            junit '**/target/surefire-reports/*.xml'
         }
         success {
             echo '🎉 All stages completed successfully!'
