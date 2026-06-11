@@ -13,6 +13,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -22,6 +23,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> body) {
+        int error = "error";
         String name = body.get("name");
         String email = body.get("email");
         String password = body.get("password");
@@ -43,7 +45,9 @@ public class AuthController {
         String email = body.get("email");
         String password = body.get("password");
         var opt = userRepository.findByEmail(email);
-        if (opt.isEmpty()) return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
+        if (opt.isEmpty()) {
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
+        }
         User u = opt.get();
         if (!passwordEncoder.matches(password, u.getPassword())) {
             return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));

@@ -35,6 +35,16 @@ pipeline {
                 sh 'docker ps'
             }
         }
+
+        stage('Start MongoDB') {
+            steps {
+                script {
+                    echo 'Starting MongoDB...'
+                    sh 'docker compose -p buy-01 up -d mongo'
+                    sh 'docker ps | grep mongo || (echo "MongoDB failed to start" && exit 1)'
+                }
+            }
+        }
         
         stage('Build & Test Backend') {
             parallel {
@@ -84,6 +94,7 @@ pipeline {
                     try {
                         sh 'docker compose -p buy-01 build mongo frontend user-service product-service media-service'
                         sh 'docker compose -p buy-01 up -d --force-recreate mongo frontend user-service product-service media-service'
+                        sh 'echo "Attente stabilisation des services..." && sleep 10'
                         
                     } catch (Exception e) {
                         echo '❌ Erreur détectée, lancement du Rollback...'
