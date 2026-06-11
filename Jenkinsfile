@@ -104,8 +104,8 @@ pipeline {
                     try {
                         sh 'docker compose -p buy-01 build frontend user-service product-service media-service'
                         sh 'docker compose -p buy-01 up -d --force-recreate frontend user-service product-service media-service'
-                        sh 'echo "Attente stabilisation des services..." && sleep 10'
-                        // sh 'exit 1'   // Error trigger for rollback testing
+                        sh 'echo "Waiting for services to stabilize... && sleep 10"'
+                        sh 'exit 1'   // Error trigger for rollback testing
                         
                     } catch (Exception e) {
                         echo '❌ Error detected, rollback starting...'
