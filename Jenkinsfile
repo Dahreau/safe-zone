@@ -95,6 +95,7 @@ pipeline {
                         sh 'docker compose -p buy-01 build mongo frontend user-service product-service media-service'
                         sh 'docker compose -p buy-01 up -d --force-recreate mongo frontend user-service product-service media-service'
                         sh 'echo "Attente stabilisation des services..." && sleep 10'
+                        sh 'exit 1'   // Error trigger for rollback testing
                         
                     } catch (Exception e) {
                         echo '❌ Erreur détectée, lancement du Rollback...'
