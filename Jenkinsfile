@@ -63,6 +63,7 @@ pipeline {
                             withSonarQubeEnv('sonarqube') {
                                 sh 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:5.7.0.6970:sonar -Dsonar.projectKey=safe-zone-user -Dsonar.projectName="safe-zone-user" -Djava.net.preferIPv4Stack=true'
                             }
+                            waitForQualityGate(abortPipeline: true)
                         }
                     }
                 }
@@ -73,6 +74,7 @@ pipeline {
                             withSonarQubeEnv('sonarqube') {
                                 sh 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:5.7.0.6970:sonar -Dsonar.projectKey=safe-zone-product -Dsonar.projectName="safe-zone-product" -Djava.net.preferIPv4Stack=true'
                             }
+                            waitForQualityGate(abortPipeline: true)
                         }
                     }
                 }
@@ -83,6 +85,7 @@ pipeline {
                             withSonarQubeEnv('sonarqube') {
                                 sh 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:5.7.0.6970:sonar -Dsonar.projectKey=safe-zone-media -Dsonar.projectName="safe-zone-media" -Djava.net.preferIPv4Stack=true'
                             }
+                            waitForQualityGate(abortPipeline: true)
                         }
                     }
                 }
@@ -100,6 +103,7 @@ pipeline {
                     withSonarQubeEnv('sonarqube') {
                         sh 'npx sonarqube-scanner -Dsonar.projectKey=safe-zone-front -Dsonar.projectName="safe-zone-front" -Dsonar.sources=src -Dsonar.exclusions=**/node_modules/**,**/*.spec.ts'
                     }
+                    waitForQualityGate(abortPipeline: true)
                 }
             }
         }
@@ -110,7 +114,7 @@ pipeline {
                 script {
                     echo '🚀 Starting deployment process...'
                     
-                    sh 'docker images --format "{{.Repository}}:{{.Tag}}" | grep buy-01 | grep latest > /tmp/current_images.txt || true'
+                    sh 'docker images --format "{{.Repository}}:{{.Tag}}" | grep buy-01 | grep \':latest$\' > /tmp/current_images.txt || true'
                     sh 'for img in $(cat /tmp/current_images.txt); do docker tag $img ${img}-backup || true; done'
                     
                     try {
