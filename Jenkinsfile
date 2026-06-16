@@ -60,6 +60,9 @@ pipeline {
                     steps {
                         dir('backend/user-service') {
                             sh 'mvn clean test'
+                            withSonarQubeEnv('sonarqube') {
+                                sh 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=safe-zone-user -Dsonar.projectName="safe-zone-user"'
+                            }
                         }
                     }
                 }
@@ -67,6 +70,9 @@ pipeline {
                     steps {
                         dir('backend/product-service') {
                             sh 'mvn clean test'
+                            withSonarQubeEnv('sonarqube') {
+                                sh 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=safe-zone-product -Dsonar.projectName="safe-zone-product"'
+                            }
                         }
                     }
                 }
@@ -74,6 +80,9 @@ pipeline {
                     steps {
                         dir('backend/media-service') {
                             sh 'mvn clean test'
+                            withSonarQubeEnv('sonarqube') {
+                                sh 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=safe-zone-media -Dsonar.projectName="safe-zone-media"'
+                            }
                         }
                     }
                 }
