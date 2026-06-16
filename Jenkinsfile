@@ -25,7 +25,7 @@ pipeline {
             when { expression { params.ROLLBACK == false } }
             steps {
                 echo 'Git Checkout in Progress...'
-                git branch: 'main', url: 'https://github.com/Dahreau/buy-01.git'
+                git branch: 'main', url: 'https://github.com/Dahreau/safe-zone'
         sh 'ls backend'
         sh 'ls frontend'
             }
