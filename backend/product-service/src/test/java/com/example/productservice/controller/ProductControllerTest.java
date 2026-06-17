@@ -144,9 +144,12 @@ class ProductControllerTest {
         product.setName("User's Product");
 
         // When
-        ResponseEntity<?> response = productController.create(product);
+        ProductController.ControllerException exception = org.junit.jupiter.api.Assertions.assertThrows(
+                ProductController.ControllerException.class,
+                () -> productController.create(product)
+        );
 
         // Then
-        assertEquals(403, response.getStatusCode().value());
+        assertEquals(403, exception.getResponse().getStatusCode().value());
     }
 }
