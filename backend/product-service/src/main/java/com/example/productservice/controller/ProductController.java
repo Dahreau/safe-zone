@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,6 +35,11 @@ public class ProductController {
         this.repo = repo;
     }
 
+    @ExceptionHandler(ControllerException.class)
+    public ResponseEntity<Object> handleControllerException(ControllerException ex) {
+        return ex.getResponse();
+    }
+
     @GetMapping
     public List<Product> listAll() {
         return repo.findAll();
@@ -47,11 +53,7 @@ public class ProductController {
     // create product - only seller
     @PostMapping
     public ResponseEntity<Object> create(@RequestBody ProductDTO dto) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || auth.getAuthorities().stream().noneMatch(a -> a.getAuthority().equalsIgnoreCase(ROLE_SELLER))) {
-            return ResponseEntity.status(403).body(Map.of(ERROR_KEY, "Only sellers can create products"));
-        }
-        String userId = auth.getName();
+        String userId = validateSeller("Only sellers can create products");
         Product p = new Product();
         p.setName(dto.getName());
         p.setDescription(dto.getDescription());
@@ -65,19 +67,8 @@ public class ProductController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Object> update(@PathVariable String id, @RequestBody ProductDTO dto) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || auth.getAuthorities().stream().noneMatch(a -> a.getAuthority().equalsIgnoreCase(ROLE_SELLER))) {
-            return ResponseEntity.status(403).body(Map.of(ERROR_KEY, "Only sellers can update products"));
-        }
-        String userId = auth.getName();
-        var opt = repo.findById(id);
-        if (opt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Product existing = opt.get();
-        if (!userId.equals(existing.getUserId())) {
-            return ResponseEntity.status(403).body(Map.of(ERROR_KEY, "Cannot modify another seller's product"));
-        }
+        String userId = validateSeller("Only sellers can update products");
+        Product existing = validateOwnership(id, userId, "Cannot modify another seller's product");
         existing.setName(dto.getName());
         existing.setDescription(dto.getDescription());
         existing.setPrice(dto.getPrice());
@@ -89,19 +80,8 @@ public class ProductController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> delete(@PathVariable String id) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || auth.getAuthorities().stream().noneMatch(a -> a.getAuthority().equalsIgnoreCase(ROLE_SELLER))) {
-            return ResponseEntity.status(403).body(Map.of(ERROR_KEY, "Only sellers can delete products"));
-        }
-        String userId = auth.getName();
-        var opt = repo.findById(id);
-        if (opt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Product existing = opt.get();
-        if (!userId.equals(existing.getUserId())) {
-            return ResponseEntity.status(403).body(Map.of(ERROR_KEY, "Cannot delete another seller's product"));
-        }
+        String userId = validateSeller("Only sellers can delete products");
+        validateOwnership(id, userId, "Cannot delete another seller's product");
         repo.deleteById(id);
         return ResponseEntity.noContent().build();
     }
@@ -133,5 +113,38 @@ public class ProductController {
         product.setImageIds(imgs);
         repo.save(product);
         return ResponseEntity.ok(product);
+    }
+
+    private String validateSeller(String errorMsg) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getAuthorities().stream().noneMatch(a -> a.getAuthority().equalsIgnoreCase(ROLE_SELLER))) {
+            throw new ControllerException(ResponseEntity.status(403).body(Map.of(ERROR_KEY, errorMsg)));
+        }
+        return auth.getName();
+    }
+
+    private Product validateOwnership(String id, String userId, String errorMsg) {
+        var opt = repo.findById(id);
+        if (opt.isEmpty()) {
+            throw new ControllerException(ResponseEntity.notFound().build());
+        }
+        Product existing = opt.get();
+        if (!userId.equals(existing.getUserId())) {
+            throw new ControllerException(ResponseEntity.status(403).body(Map.of(ERROR_KEY, errorMsg)));
+        }
+        return existing;
+    }
+
+    private static class ControllerException extends RuntimeException {
+
+        private final transient ResponseEntity<Object> response;
+
+        public ControllerException(ResponseEntity<Object> response) {
+            this.response = response;
+        }
+
+        public ResponseEntity<Object> getResponse() {
+            return response;
+        }
     }
 }
