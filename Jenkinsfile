@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    options {
+        disableConcurrentBuilds()
+    }
+
     tools {
         maven 'Maven3'
         nodejs 'NodeJS'
@@ -54,7 +58,7 @@ pipeline {
             }
         }
         
-stage('Build & Test Backend') {
+        stage('Build & Test Backend') {
             when { expression { params.ROLLBACK == false } }
             parallel {
                 stage('User Service Test') {
@@ -115,10 +119,8 @@ stage('Build & Test Backend') {
                     sh 'npm ci --unsafe-perm'
                     sh 'npx puppeteer install'
                     sh 'npm run build'
-                    sh 'export CI=true && npm test -- --project=buy-frontend'
-                    withSonarQubeEnv('sonarqube') {
-                        sh 'npx sonarqube-scanner -Dsonar.projectKey=safe-zone-front -Dsonar.projectName="safe-zone-front" -Dsonar.sources=src -Dsonar.exclusions=**/node_modules/**,**/*.spec.ts'
-                    }
+                    sh 'export CI=true && npm test -- --project=buy-frontend --code-coverage --no-watch'
+                    sh 'npx sonarqube-scanner -Dsonar.projectKey=safe-zone-front -Dsonar.projectName="safe-zone-front" -Dsonar.sources=src -Dsonar.exclusions=**/node_modules/**,**/*.spec.ts -Dsonar.javascript.lcov.reportPaths=coverage/buy-frontend/lcov.info'
                     waitForQualityGate(abortPipeline: true)
                 }
             }
