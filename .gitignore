@@ -56,3 +56,6 @@ Thumbs.db
 # Jenkins
 old-jenkins-data/
 jenkins-data/
+
+# Coverage folder
+frontend/coverage/

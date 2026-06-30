@@ -120,7 +120,9 @@ pipeline {
                     sh 'npx puppeteer install'
                     sh 'npm run build'
                     sh 'export CI=true && npm test -- --project=buy-frontend --code-coverage --no-watch'
-                    sh 'npx sonarqube-scanner -Dsonar.projectKey=safe-zone-front -Dsonar.projectName="safe-zone-front" -Dsonar.sources=src -Dsonar.exclusions=**/node_modules/**,**/*.spec.ts -Dsonar.javascript.lcov.reportPaths=coverage/buy-frontend/lcov.info'
+                    withSonarQubeEnv('sonarqube') {
+                        sh 'npx sonarqube-scanner -Dsonar.projectKey=safe-zone-front -Dsonar.projectName="safe-zone-front" -Dsonar.sources=src -Dsonar.exclusions=**/node_modules/**,**/*.spec.ts -Dsonar.javascript.lcov.reportPaths=coverage/buy-frontend/lcov.info'
+                    }
                     waitForQualityGate(abortPipeline: true)
                 }
             }
